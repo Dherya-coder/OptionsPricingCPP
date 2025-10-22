@@ -4,21 +4,20 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <chrono> 
-#include <cstdlib> // For std::stod
+#include <chrono>
+#include <cstdlib>
 
 int main(int argc, char* argv[]) {
-    
-    // Default option parameters
+
+    // === Default Option Parameters ===
     double spotPrice = 100.0;
     double strikePrice = 100.0;
-    double riskFreeRate = 0.1;
-    double volatility = 0.1;
+    double riskFreeRate = 0.05;
+    double volatility = 0.2;
     double timeToMaturity = 1.0;
     std::string optionType = "call";
 
-    // Check if input arguments are provided
-    if (argc > 6) { // Expecting 6 arguments: executable name, spotPrice, strikePrice, riskFreeRate, volatility, timeToMaturity, optionType
+    if (argc > 6) {
         try {
             spotPrice = std::stod(argv[1]);
             strikePrice = std::stod(argv[2]);
@@ -28,31 +27,30 @@ int main(int argc, char* argv[]) {
             optionType = argv[6];
         } catch (const std::exception& e) {
             std::cerr << "Error parsing input arguments: " << e.what() << std::endl;
-            return 1; // Exit with error code
+            return 1;
         }
     }
 
-    // Create an Option object
+    // === Create the Option Object ===
     Option option(spotPrice, strikePrice, riskFreeRate, volatility, timeToMaturity, optionType);
 
-    // List of pricing models to use
-    std::vector<std::string> models = {"Binomial", "BlackScholes", "MonteCarlo"};
+    // === Print CSV Header ===
+    std::cout << "Steps,BinomialPrice,MonteCarloPrice\n";
 
-    // Loop through each model, calculate prices, and time the operation
-    for (const auto& modelName : models) {
-        auto model = PricingModelFactory::createModel(modelName);
-        if (model) {
-            auto start = std::chrono::high_resolution_clock::now(); // Start timing
-            
-            double price = model->calculatePrice(option); // Pricing calculation
-            
-            auto end = std::chrono::high_resolution_clock::now(); // End timing
-            std::chrono::duration<double, std::milli> duration = end - start; // Calculate duration
-            
-            std::cout << modelName << ":\t " << price << " \t(Time: " << duration.count() << " ms)" << std::endl;
-        } else {
-            std::cerr << "Failed to create " << modelName << " pricing model." << std::endl;
-        }
+    // === Loop to Show Convergence ===
+    for (int steps = 10; steps <= 1000; steps += 10) {
+
+        // Binomial Model
+        auto binomialModel = PricingModelFactory::createModel("Binomial");
+        binomialModel->setSteps(steps); // ensure your Binomial model supports setSteps()
+        double binomialPrice = binomialModel->calculatePrice(option);
+
+        // Monte Carlo Model
+        auto monteCarloModel = PricingModelFactory::createModel("MonteCarlo");
+        monteCarloModel->setSimulations(steps * 100); // more samples for stability
+        double monteCarloPrice = monteCarloModel->calculatePrice(option);
+
+        std::cout << steps << "," << binomialPrice << "," << monteCarloPrice << std::endl;
     }
 
     return 0;
