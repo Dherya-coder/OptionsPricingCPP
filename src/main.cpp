@@ -40,16 +40,17 @@ int main(int argc, char* argv[]) {
     // === Loop to Show Convergence ===
     for (int steps = 10; steps <= 1000; steps += 10) {
 
-        // Binomial Model
+        // ---------------- Binomial ----------------
         auto binomialModel = PricingModelFactory::createModel("Binomial");
-        binomialModel->setSteps(steps); // ensure your Binomial model supports setSteps()
+        binomialModel->setSteps(steps);               // calls virtual base method
         double binomialPrice = binomialModel->calculatePrice(option);
 
-        // Monte Carlo Model
+        // ---------------- Monte Carlo ----------------
         auto monteCarloModel = PricingModelFactory::createModel("MonteCarlo");
-        monteCarloModel->setSimulations(steps * 100); // more samples for stability
+        monteCarloModel->setSimulations(steps * 100); // calls virtual base method
         double monteCarloPrice = monteCarloModel->calculatePrice(option);
 
+        // ---------------- Output ----------------
         std::cout << steps << "," << binomialPrice << "," << monteCarloPrice << std::endl;
     }
 
