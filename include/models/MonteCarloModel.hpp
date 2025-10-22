@@ -9,6 +9,9 @@ public:
     MonteCarloModel(int numSimulations = 10000);
     virtual double calculatePrice(const Option& option) const override;
 
+    // 🔹 Add this setter so you can update simulations dynamically
+    void setSimulations(int n) { numSimulations_ = n; }
+
 private:
     int numSimulations_; // Number of simulated asset paths
 };
